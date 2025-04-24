@@ -181,7 +181,7 @@ const MyForms = () => {
 
   return (
     <div className={`p-10 min-h-screen transition ${font}`}>
-      <div className="flex justify-between">
+      <div className="flex justify-between flex-col lg:flex-row pb-5">
         <h1 className="text-3xl font-bold mb-5">Create New Form</h1>
         <Button
           className="bg-sky-500 hover:bg-sky-700 px-10 text-white"
