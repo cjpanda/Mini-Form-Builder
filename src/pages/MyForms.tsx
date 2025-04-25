@@ -1,20 +1,5 @@
 import { useState } from "react";
-
 import { z } from "zod";
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,23 +24,68 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
 
-const fieldLabels: Record<FieldType, string> = {
-  first_name: "First Name",
-  last_name: "Last Name",
-  text: "Text Input",
-  email: "Email",
-  number: "Number",
-  textarea: "Textarea",
-  password: "Password",
-  date: "Date Picker",
-  checkbox: "Checkbox",
-  radio: "Radio Button",
-  select: "Dropdown",
-  button: "Submit",
+const translations: Record<string, Record<FieldType, string>> = {
+  en: {
+    first_name: "First Name",
+    last_name: "Last Name",
+    text: "Text Input",
+    email: "Email",
+    number: "Number",
+    textarea: "Textarea",
+    password: "Password",
+    date: "Date Picker",
+    checkbox: "Checkbox",
+    radio: "Radio Button",
+    select: "Dropdown",
+    button: "Submit",
+  },
+  de: {
+    first_name: "Vorname",
+    last_name: "Nachname",
+    text: "Textfeld",
+    email: "E-Mail",
+    number: "Nummer",
+    textarea: "Textbereich",
+    password: "Passwort",
+    date: "Datumsauswahl",
+    checkbox: "Kontrollkästchen",
+    radio: "Optionsfeld",
+    select: "Dropdown",
+    button: "Absenden",
+  },
+  fr: {
+    first_name: "Prénom",
+    last_name: "Nom de famille",
+    text: "Champ de texte",
+    email: "E-mail",
+    number: "Nombre",
+    textarea: "Zone de texte",
+    password: "Mot de passe",
+    date: "Sélecteur de date",
+    checkbox: "Case à cocher",
+    radio: "Bouton radio",
+    select: "Liste déroulante",
+    button: "Soumettre",
+  },
+  es: {
+    first_name: "Nombre",
+    last_name: "Apellido",
+    text: "Campo de texto",
+    email: "Correo electrónico",
+    number: "Número",
+    textarea: "Área de texto",
+    password: "Contraseña",
+    date: "Selector de fecha",
+    checkbox: "Casilla de verificación",
+    radio: "Botón de opción",
+    select: "Desplegable",
+    button: "Enviar",
+  },
 };
 
 interface Field {
@@ -63,28 +93,6 @@ interface Field {
   type: FieldType;
   label: string;
 }
-
-const SortableItem = ({
-  id,
-  children,
-}: {
-  id: string;
-  children: React.ReactNode;
-}) => {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      {children}
-    </div>
-  );
-};
 
 const MyForms = () => {
   const [formTitle, setFormTitle] = useState("Untitled Form");
@@ -96,29 +104,12 @@ const MyForms = () => {
   const [bgColor, setBgColor] = useState("bg-white");
   const [font, setFont] = useState("sans");
   const [showLabels, setShowLabels] = useState(true);
+  const [language, setLanguage] = useState("en");
   const [showPreview, setShowPreview] = useState(false);
   const [formErrors, setFormErrors] = useState<string[]>([]);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    })
-  );
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleDragEnd = (event: any) => {
-    const { active, over } = event;
-    if (active.id !== over.id) {
-      const oldIndex = fields.findIndex((f) => f.id === active.id);
-      const newIndex = fields.findIndex((f) => f.id === over.id);
-      setFields((items) => arrayMove(items, oldIndex, newIndex));
-    }
-  };
-
   const addField = (type: FieldType) => {
-    const label = fieldLabels[type];
+    const label = translations[language]?.[type] || type;
     setFields((prev) => [...prev, { id: crypto.randomUUID(), type, label }]);
     setShowCommand(false);
   };
@@ -180,8 +171,8 @@ const MyForms = () => {
   };
 
   return (
-    <div className={`p-10 min-h-screen`}>
-      <div className="flex justify-between flex-col lg:flex-row pb-5">
+    <div className={`p-10 min-h-screen transition ${font}`}>
+      <div className="flex justify-between">
         <h1 className="text-3xl font-bold mb-5">Create New Form</h1>
         <Button
           className="bg-sky-500 hover:bg-sky-700 px-10 text-white"
@@ -195,17 +186,17 @@ const MyForms = () => {
         {/* Form Builder */}
         <div
           className={`w-full lg:w-[60%] space-y-6 p-10 rounded-xl shadow-md ${bgColor} ${
-            font === "sans"
-              ? "font-sans"
+            font === "inter"
+              ? "font-inter"
+              : font === "poppins"
+              ? "font-poppins"
+              : font === "open"
+              ? "font-open"
               : font === "serif"
               ? "font-serif"
               : font === "mono"
               ? "font-mono"
-              : font === "inter"
-              ? "font-[Inter]"
-              : font === "poppins"
-              ? "font-[Poppins]"
-              : ""
+              : "font-sans"
           }`}
         >
           <input
@@ -215,27 +206,15 @@ const MyForms = () => {
             placeholder="Untitled Form"
           />
 
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={fields.map((f) => f.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              {fields.map((field) => (
-                <SortableItem key={field.id} id={field.id}>
-                  <FormField
-                    {...field}
-                    onDelete={removeField}
-                    showLabel={showLabels}
-                    error={false}
-                  />
-                </SortableItem>
-              ))}
-            </SortableContext>
-          </DndContext>
+          {fields.map((field) => (
+            <FormField
+              key={field.id}
+              {...field}
+              onDelete={removeField}
+              showLabel={showLabels}
+              error={false}
+            />
+          ))}
 
           <Button
             onClick={() => setShowCommand((prev) => !prev)}
@@ -251,15 +230,17 @@ const MyForms = () => {
                 <CommandList>
                   <CommandEmpty>No input type found.</CommandEmpty>
                   <CommandGroup heading="Field Types">
-                    {(Object.keys(fieldLabels) as FieldType[]).map((type) => (
-                      <CommandItem
-                        key={type}
-                        value={type}
-                        onSelect={() => addField(type)}
-                      >
-                        {fieldLabels[type]}
-                      </CommandItem>
-                    ))}
+                    {(Object.keys(translations.en) as FieldType[]).map(
+                      (type) => (
+                        <CommandItem
+                          key={type}
+                          value={type}
+                          onSelect={() => addField(type)}
+                        >
+                          {translations[language]?.[type] || type}
+                        </CommandItem>
+                      )
+                    )}
                   </CommandGroup>
                 </CommandList>
               </Command>
@@ -279,11 +260,11 @@ const MyForms = () => {
             <div className="flex gap-2">
               {[
                 "bg-white",
-                "bg-gray-200",
-                "bg-blue-200",
-                "bg-yellow-200",
-                "bg-green-200",
-                "bg-pink-200",
+                "bg-gray-50",
+                "bg-blue-50",
+                "bg-yellow-50",
+                "bg-green-50",
+                "bg-pink-50",
               ].map((color) => (
                 <button
                   key={color}
@@ -297,12 +278,12 @@ const MyForms = () => {
             </div>
           </div>
 
-          {/* Font Selector */}
+          {/* Font Style */}
           <div>
             <label className="text-sm font-medium mb-2 block">Font Style</label>
             <Select value={font} onValueChange={setFont}>
               <SelectTrigger>
-                <SelectValue placeholder="Select font" />
+                <SelectValue placeholder="Select a font" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="sans">Sans</SelectItem>
@@ -310,14 +291,31 @@ const MyForms = () => {
                 <SelectItem value="mono">Monospace</SelectItem>
                 <SelectItem value="inter">Inter</SelectItem>
                 <SelectItem value="poppins">Poppins</SelectItem>
+                <SelectItem value="open">Open Sans</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Label Toggle */}
+          {/* Show Labels */}
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Show Labels</span>
             <Switch checked={showLabels} onCheckedChange={setShowLabels} />
+          </div>
+
+          {/* Language Picker */}
+          <div>
+            <label className="text-sm font-medium mb-2 block">Language</label>
+            <Select value={language} onValueChange={setLanguage}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a language" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="de">German</SelectItem>
+                <SelectItem value="fr">French</SelectItem>
+                <SelectItem value="es">Spanish</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -326,7 +324,10 @@ const MyForms = () => {
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className={`${bgColor} font-${font} p-8`}>
           <DialogHeader>
-            <DialogTitle className="text-2xl mb-4">{formTitle}</DialogTitle>
+            <DialogTitle className="text-2xl mb-2">{formTitle}</DialogTitle>
+            <DialogDescription>
+              Please fill out the form below and click Submit.
+            </DialogDescription>
           </DialogHeader>
 
           {formErrors.length > 0 && (
