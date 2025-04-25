@@ -180,7 +180,7 @@ const MyForms = () => {
   };
 
   return (
-    <div className={`p-10 min-h-screen transition ${font}`}>
+    <div className={`p-10 min-h-screen`}>
       <div className="flex justify-between flex-col lg:flex-row pb-5">
         <h1 className="text-3xl font-bold mb-5">Create New Form</h1>
         <Button
@@ -194,7 +194,19 @@ const MyForms = () => {
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Form Builder */}
         <div
-          className={`w-full lg:w-[60%] space-y-6 p-10 rounded-xl shadow-md ${bgColor} font-${font}`}
+          className={`w-full lg:w-[60%] space-y-6 p-10 rounded-xl shadow-md ${bgColor} ${
+            font === "sans"
+              ? "font-sans"
+              : font === "serif"
+              ? "font-serif"
+              : font === "mono"
+              ? "font-mono"
+              : font === "inter"
+              ? "font-[Inter]"
+              : font === "poppins"
+              ? "font-[Poppins]"
+              : ""
+          }`}
         >
           <input
             value={formTitle}
